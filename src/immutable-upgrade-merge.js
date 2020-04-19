@@ -17,6 +17,25 @@ function transformMergeFunctions(j, root, mergeFunction = 'merge') {
   return root;
 }
 
+function transformMergeInOrWithFunctions(j, root, mergeFunction = 'mergeIn') {
+    const callExpressions = root.find(j.CallExpression, {
+      callee: {
+        type: 'MemberExpression',
+        property: { type: 'Identifier', name: mergeFunction },
+      },
+    }
+  );
+
+  callExpressions.replaceWith(nodePath => {
+      const { node } = nodePath;
+      const object = j.callExpression(j.identifier('fromJS'),
+                                      [node.arguments[1]])
+      node.arguments = [node.arguments[0], object];
+      return node;
+    });
+  return root;
+}
+
 function getFirstNodePath (j, root){
   return root.find(j.Program).get('body', 0);
 }
@@ -63,6 +82,10 @@ module.exports = function transform(file, api) {
 
   ['merge', 'mergeDeep'].forEach((mergeFunction) => {
     root = transformMergeFunctions(j, root, mergeFunction);
+  });
+
+    ['mergeIn', 'mergeDeepIn', 'mergeWith', 'mergeDeepWith'].forEach((mergeFunction) => {
+    root = transformMergeInOrWithFunctions(j, root, mergeFunction);
   });
 
   return root.toSource({ quote: 'single' });

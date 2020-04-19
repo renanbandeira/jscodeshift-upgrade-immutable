@@ -24,6 +24,10 @@ export const createNotificationReducer = actions => (state = initialState, actio
           visible: true
         }
       });
+    case actions.NOTIFICATION_TYPE_CHANGED:
+      return state.mergeIn(['notification', 'type'], action.payload);
+    case actions.NOTIFICATION_TEXT_APPENDED:
+      return state.getIn(['notification', 'text']).mergeDeepWith((oldVal, newVal) => `${oldVal} ${newVal}`, action.payload);
     case actions.NOTIFICATION_TEXT_CHANGED:
       return state.get('notification').merge(action.payload);
     case actions.NOTIFICATION_COLLAPSED:
