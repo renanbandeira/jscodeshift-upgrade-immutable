@@ -1,0 +1,16 @@
+{
+  "name": "jscodeshift-upgrade-immutable",
+  "version": "1.0.0",
+  "description": "Codemod to facilitate the immutable upgrade from v3 to v4 (injecting fromJS inside merge functions)",
+  "main": "index.js",
+  "author": "Renan Bandeira",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "jest": "^25.3.0",
+    "jscodeshift": "^0.7.0"
+  }
+}
