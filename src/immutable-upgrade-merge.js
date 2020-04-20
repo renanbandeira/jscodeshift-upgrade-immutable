@@ -66,7 +66,7 @@ module.exports = function transform(file, api) {
   } else {
     const firstNode = getFirstNode(j, root);
     const firstComments = firstNode.comments;
-	if (firstComments.length > 0) {
+	if (firstComments && firstComments.length > 0) {
       delete firstNode.comments;
 		root.find(firstNode.type).replaceWith(j.importDeclaration([j.importSpecifier(j.identifier('fromJS'))],
                             j.literal('immutable')));
