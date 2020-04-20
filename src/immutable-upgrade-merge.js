@@ -96,7 +96,7 @@ module.exports = function transform(file, api) {
       immutableImport.comments = firstComments;
 
     } else {
-      getFirstNodePath(j, root).insertBefore("import { fromJS } from 'immutable'");
+      getFirstNodePath(j, root).insertBefore("import { fromJS } from 'immutable';");
     }
   }
 
