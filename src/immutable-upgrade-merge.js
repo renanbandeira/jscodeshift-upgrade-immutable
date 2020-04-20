@@ -100,12 +100,12 @@ module.exports = function transform(file, api) {
       const firstNode = getFirstNode(j, root);
       const firstComments = firstNode.comments;
   	if (firstComments && firstComments.length > 0) {
-        delete firstNode.comments;
-  		root.find(firstNode.type).replaceWith(j.importDeclaration([j.importSpecifier(j.identifier('fromJS'))],
-                              j.literal('immutable')));
-        const immutableImport = getFirstNode(j, root);
-        root.find(immutableImport.type).insertAfter(firstNode)
-        immutableImport.comments = firstComments;
+      delete firstNode.comments;
+      root.find(firstNode.type).at(0).replaceWith(j.importDeclaration([j.importSpecifier(j.identifier('fromJS'))],
+                          j.literal('immutable')));
+      const immutableImport = getFirstNode(j, root);
+      root.find(immutableImport.type).at(0).insertAfter(firstNode)
+      immutableImport.comments = firstComments;
 
       } else {
         getFirstNodePath(j, root).insertBefore("import { fromJS } from 'immutable';");
