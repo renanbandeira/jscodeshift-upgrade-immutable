@@ -1,3 +1,20 @@
+function hasAnyMergeFunction(j, root) {
+  const mergeFucntions = ['merge', 'mergeDeep', 'mergeIn', 'mergeDeepIn', 'mergeWith', 'mergeDeepWith'];
+  let callExpressions;
+  for (let i = 0; i < mergeFucntions.length; i++) {
+    callExpressions = root.find(j.CallExpression, {
+      callee: {
+        type: 'MemberExpression',
+        property: { type: 'Identifier', name: mergeFucntions[i] },
+      },
+    });
+    if (callExpressions.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function transformMergeFunctions(j, root, mergeFunction = 'merge') {
     const callExpressions = root.find(j.CallExpression, {
       callee: {
@@ -50,6 +67,10 @@ module.exports = function transform(file, api) {
   const j = api.jscodeshift;
   let root = j(file.source);
 
+  if (!hasAnyMergeFunction(j, root)) {
+    return;
+  }
+
   const immutableImportDeclaration = root.find(j.ImportDeclaration, {
     source: {
       type: 'Literal',
@@ -75,8 +96,7 @@ module.exports = function transform(file, api) {
       immutableImport.comments = firstComments;
 
     } else {
-      j(root.find(j.ImportDeclaration).at(0).get())
-	    .insertBefore("import { fromJS } from 'immutable'")
+      getFirstNodePath(j, root).insertBefore("import { fromJS } from 'immutable'");
     }
   }
 
