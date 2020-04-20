@@ -67,44 +67,58 @@ module.exports = function transform(file, api) {
   const j = api.jscodeshift;
   let root = j(file.source);
 
+  // if file doesn't have merge function, there is no need to change
   if (!hasAnyMergeFunction(j, root)) {
     return;
   }
 
-  const immutableImportDeclaration = root.find(j.ImportDeclaration, {
-    source: {
-      type: 'Literal',
-      value: 'immutable',
-    },
+  const fromJSDeclaration = root.find(j.ImportSpecifier, {
+    imported: {
+      type: 'Identifier',
+      name: 'fromJS',
+    }
   });
 
-  if (immutableImportDeclaration.size() > 0) {
-    immutableImportDeclaration.replaceWith(nodePath => {
-      const { node } = nodePath;
-      node.specifiers.push(j.importSpecifier(j.identifier('fromJS')));
-      return node;
+  // if file already imports fromJS, there is no need to import
+  if (fromJSDeclaration.length === 0) {
+    const immutableImportDeclaration = root.find(j.ImportDeclaration, {
+      source: {
+        type: 'Literal',
+        value: 'immutable',
+      },
     });
-  } else {
-    const firstNode = getFirstNode(j, root);
-    const firstComments = firstNode.comments;
-	if (firstComments && firstComments.length > 0) {
-      delete firstNode.comments;
-		root.find(firstNode.type).replaceWith(j.importDeclaration([j.importSpecifier(j.identifier('fromJS'))],
-                            j.literal('immutable')));
-      const immutableImport = getFirstNode(j, root);
-      root.find(immutableImport.type).insertAfter(firstNode)
-      immutableImport.comments = firstComments;
 
+    // appends import with immutable import
+    if (immutableImportDeclaration.size() > 0) {
+      immutableImportDeclaration.replaceWith(nodePath => {
+        const { node } = nodePath;
+        node.specifiers.push(j.importSpecifier(j.identifier('fromJS')));
+        return node;
+      });
     } else {
-      getFirstNodePath(j, root).insertBefore("import { fromJS } from 'immutable';");
+      // puts import immutable in first line after comments
+      const firstNode = getFirstNode(j, root);
+      const firstComments = firstNode.comments;
+  	if (firstComments && firstComments.length > 0) {
+        delete firstNode.comments;
+  		root.find(firstNode.type).replaceWith(j.importDeclaration([j.importSpecifier(j.identifier('fromJS'))],
+                              j.literal('immutable')));
+        const immutableImport = getFirstNode(j, root);
+        root.find(immutableImport.type).insertAfter(firstNode)
+        immutableImport.comments = firstComments;
+
+      } else {
+        getFirstNodePath(j, root).insertBefore("import { fromJS } from 'immutable';");
+      }
     }
   }
 
+  // Puts fromJS on merge arguments
   ['merge', 'mergeDeep'].forEach((mergeFunction) => {
     root = transformMergeFunctions(j, root, mergeFunction);
   });
 
-    ['mergeIn', 'mergeDeepIn', 'mergeWith', 'mergeDeepWith'].forEach((mergeFunction) => {
+  ['mergeIn', 'mergeDeepIn', 'mergeWith', 'mergeDeepWith'].forEach((mergeFunction) => {
     root = transformMergeInOrWithFunctions(j, root, mergeFunction);
   });
 
